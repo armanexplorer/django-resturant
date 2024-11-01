@@ -1,4 +1,7 @@
 from django.db import models
+from django.db.models import Sum
+from django.db.models.functions import Coalesce
+from django.core.validators import MinValueValidator
 
 
 class Order(models.Model):
@@ -24,9 +27,21 @@ class Order(models.Model):
 class Item(models.Model):
     name = models.CharField(max_length=100)
     price = models.DecimalField(max_digits=10, decimal_places=2)
+    quantity = models.IntegerField()
+
+    @property
+    def remaining_quantity(self):
+        return (
+            self.quantity
+            - OrderItem.objects.filter(item_id=self.id).aggregate(
+                count_sum=Coalesce(Sum("count"), 0)
+            )["count_sum"]
+        )
 
 
 class OrderItem(models.Model):
-    order = models.ForeignKey(Order, on_delete=models.CASCADE)
-    item = models.ForeignKey(Item, on_delete=models.CASCADE)
-    count = models.PositiveSmallIntegerField()
+    order = models.ForeignKey(
+        Order, on_delete=models.CASCADE, related_name="order_items"
+    )
+    item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name="order_items")
+    count = models.PositiveSmallIntegerField(validators=[MinValueValidator(1)])

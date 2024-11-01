@@ -8,6 +8,5 @@ router.register(r"orders", OrderViewSet)
 
 
 urlpatterns = [
-    # path('orders/', process_order,  name='create-order'),
     path("", include(router.urls)),
 ]
