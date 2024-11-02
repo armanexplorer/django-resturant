@@ -1,6 +1,6 @@
-#default_language_version:
-#  python: python3.9  # Adjust this to your Python version
-
+default_language_version:
+  python: python3.11  # Adjust this to your Python version
+fail_fast: true
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
@@ -15,12 +15,16 @@ repos:
     hooks:
       - id: black
 
-#  - repo: https://github.com/pycqa/isort
-#    rev: 5.12.0
-#    hooks:
-#      - id: isort
-
   - repo: https://github.com/pycqa/flake8
     rev: 6.1.0
     hooks:
       - id: flake8
+
+  - repo: local
+    hooks:
+      - id: run-tox
+        name: Run Tox
+        entry: tox
+        language: system
+        pass_filenames: false
+        always_run: true
