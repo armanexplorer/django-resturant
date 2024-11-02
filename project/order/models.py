@@ -1,6 +1,4 @@
 from django.db import models
-from django.db.models import Sum
-from django.db.models.functions import Coalesce
 from django.core.validators import MinValueValidator
 
 
@@ -20,23 +18,14 @@ class Order(models.Model):
     total_price = models.DecimalField(
         max_digits=10, decimal_places=2, null=True, blank=True
     )
-    status = models.CharField(max_length=20, choices=status_choices)
+    status = models.CharField(max_length=20, choices=status_choices, default="new")
     created_at = models.DateTimeField(auto_now_add=True)
 
 
 class Item(models.Model):
     name = models.CharField(max_length=100)
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    quantity = models.IntegerField()
-
-    @property
-    def remaining_quantity(self):
-        return (
-            self.quantity
-            - OrderItem.objects.filter(item_id=self.id).aggregate(
-                count_sum=Coalesce(Sum("count"), 0)
-            )["count_sum"]
-        )
+    quantity = models.PositiveIntegerField()
 
 
 class OrderItem(models.Model):

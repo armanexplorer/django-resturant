@@ -18,6 +18,6 @@ class OrderViewSet(
     RetrieveModelMixin,
     UpdateModelMixin,
 ):
-    queryset = Order.objects.all()
+    queryset = Order.objects.all().order_by("id")
     serializer_class = OrderSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]

@@ -6,7 +6,7 @@ from rest_framework import serializers
 from .models import Item, Order, OrderItem
 
 
-class ItemSerializer(serializers.ModelSerializer):
+class BaseItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = Item
         fields = ["id", "name", "price"]
@@ -19,15 +19,14 @@ class BaseOrderSerializer(serializers.ModelSerializer):
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
-    item = ItemSerializer(read_only=True)
-    order = BaseOrderSerializer(read_only=True)
+    item = BaseItemSerializer(read_only=True)
     item_id = serializers.PrimaryKeyRelatedField(
-        queryset=Item.objects.all(), source="item", write_only=True
+        queryset=Item.objects.all(), source="item", write_only=True, required=True
     )
 
     class Meta:
         model = OrderItem
-        fields = ["id", "item", "item_id", "order", "count"]
+        fields = ["id", "item", "item_id", "count"]
 
     def validate_count(self, count):
         if count <= 0:
@@ -38,7 +37,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
 
 class OrderSerializer(serializers.ModelSerializer):
-    order_items = OrderItemSerializer(many=True, required=False)
+    order_items = OrderItemSerializer(many=True, required=True)
 
     class Meta:
         model = Order
@@ -49,8 +48,8 @@ class OrderSerializer(serializers.ModelSerializer):
             "address",
             "total_price",
             "status",
-            "created_at",
             "order_items",
+            "created_at",
         ]
         # `total_price` will be calculated using request data, `created_at` will be
         # stored automatically, and `status` is better to be handled by API call
@@ -94,6 +93,13 @@ class OrderSerializer(serializers.ModelSerializer):
         return instance
 
     def validate_order_items(self, order_items):
+        # run nested serializer validation
+        OrderItemSerializer(
+            data=self.initial_data.get("order_items"), many=True
+        ).is_valid(raise_exception=True)
+
+        if len(order_items) == 0:
+            raise serializers.ValidationError("Order items cannot be empty.")
         # Extract item IDs from the order_items list
         item_ids = [order_item["item"].id for order_item in order_items]
 
