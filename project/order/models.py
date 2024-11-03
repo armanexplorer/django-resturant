@@ -10,8 +10,17 @@ class Order(models.Model):
         ("delivered", "Delivered"),
         ("canceled", "Canceled"),
     ]
+
+    # TODO: should be connected to the user model to not store same value multiple
+    #  times, and also move the future related logic into its model
     customer_name = models.CharField(max_length=100)
+
+    # TODO: we can use `PhoneNumberField` from libraries like
+    #  `django-phonenumber-field` to have out-of-box validation
     phone = models.CharField(max_length=20)
+
+    # TODO: we can connect this to a new model (like Address) to not store same value
+    #  multiple times, and also move the future related logic into its model
     address = models.TextField()
     # to create the order first and then relate it to its OrderItems,
     # `total_price` should be nullable
